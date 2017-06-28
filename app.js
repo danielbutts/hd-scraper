@@ -1,9 +1,10 @@
 const express = require('express');
-const index = require('./routes/index');
+const links = require('./routes/links');
+require('dotenv').config();
 
 const app = express();
 
-app.use('/', index);
+app.use('/links', links);
 
 const PORT = process.env.PORT || '3000';
 app.listen(PORT);

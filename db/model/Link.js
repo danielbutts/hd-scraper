@@ -3,19 +3,20 @@ const cheerio = require('cheerio');
 const knex = require('../connection');
 
 class Link {
-  constructor(href, title) {
+  constructor(href, title, isVisited, isRelevant, id) {
     this.href = href;
     this.title = title;
     this.isVisited = false;
     this.isRelevant = true;
+    this.id = id;
   }
 
   insertToDatabaseAsPromise() {
     return knex('links').insert({ href: this.href, title: this.title });
   }
 
-  static updateInDatabaseAsPromise(href, isVisited) {
-    return knex('links').update({ is_visited: isVisited }).where({ href });    
+  updateVisitedAsPromise(isVisited) {
+    return knex('links').update({ is_visited: isVisited }).where({ id: this.id });    
   }
   
   static getExistingLinksAsPromise() {
@@ -24,6 +25,10 @@ class Link {
   
   static getUnvisitedLinksAsPromise() {
     return knex('links').where({ is_visited: false, is_relevant: true });
+  }
+  
+  static getLinkAsPromise(id) {
+    return knex('links').where({ id });
   }
   
   static getLinkByUrlAsPromise(url) {
