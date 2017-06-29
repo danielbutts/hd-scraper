@@ -102,4 +102,59 @@ router.post('/:id/visit', (req, res) => {
   }
 });
 
+router.post('/visit/:count', (req, res) => {
+  let count = req.params.count;
+  if (count === undefined) {
+    res.status(400).json({ error: 'Missing required parameter \'count\'.' });
+  } else if (typeof count !== 'number' && count <= 0) {
+    res.status(400).json({ error: 'Invalid value for parameter \'count\'.' });
+  } else {
+    Link.getUnvisitedLinksAsPromise().then((links) => {
+      if (links.length === 0) {
+        res.status(400).json({ error: 'No links found.' });
+      } else {
+        count = Math.min(count, links.length);
+        const visitedLinks = [];
+        const pagesToVisit = [];
+        for (let i = 0; i < count; i += 1) {
+          const link = new Link(links[i].href,
+            links[i].title,
+            links[i].is_visited,
+            links[i].is_relevant,
+            links[i].id);
+          visitedLinks.push(link);
+          pagesToVisit.push(Page.getPageAsPromise(`${process.env.BASE_URL}${link.href}`));
+        }
+
+        Promise.all(pagesToVisit).then((results) => {
+          const queries = [];
+
+          results.forEach((newPage, index) => {
+            const page = new Page(visitedLinks[index].href, newPage.html());
+            queries.push(page.saveToDatabaseAsPromise());
+            queries.push(visitedLinks[index].updateVisitedAsPromise(true));
+            console.log('UPDATING VISITED LINK', visitedLinks[index], index);
+          });
+
+          Promise.all(queries).then((upserts) => {
+            const inserts = [];
+            upserts.forEach((el, index) => {
+              if (index % 2 === 0) {
+                inserts.push(el);
+              }
+            });
+            res.status(200).json(inserts);
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+});
+
 module.exports = router;
