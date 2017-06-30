@@ -17,7 +17,9 @@ class Page {
     const $ = cheerio.load(this.html);
     const anchors = $('a');
     Object.values(anchors).forEach((anchor) => {
-      if (anchor.attribs !== undefined && anchor.attribs.href.substring(0, 3).match('/[bpc]/')) {
+      if (anchor.attribs !== undefined && 
+        anchor.attribs.href !== undefined && 
+        anchor.attribs.href.substring(0, 3).match('/[bpc]/')) {
         let link = new Link(anchor.attribs.href, anchor.attribs.title);
         links.push(link);
       }
@@ -36,7 +38,7 @@ class Page {
   
   updatePageAsPromise() {
     console.log('id', this.id,'is_parsed', this.isParsed, 'has_sku', this.hasSKU);
-    return knex('pages').update({ is_parsed: this.isParsed, has_sku: this.hasSKU }).where({ id: this.id });    
+    return knex('pages').update({ is_parsed: this.isParsed, has_sku: this.hasSKU }).where({ id: this.id }).returning('*');    
   }
   
   static loadPagesAsPromise(unparsed) {

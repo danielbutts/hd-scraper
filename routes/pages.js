@@ -1,5 +1,6 @@
 const express = require('express');
 const Page = require('../db/model/Page');
+const Link = require('../db/model/Link');
 
 const router = express.Router();
 
@@ -46,15 +47,24 @@ router.post('/:id/parse', (req, res) => {
       if (page.isParsed) {
         res.status(400).json({ error: `Page with id '${id}' has already been parsed.` });
       } else {
-        const links = page.parseLinksFromPage();
-        const queries = [];
-        links.forEach((link) => {
-          queries.push(link.insertToDatabaseAsPromise());
-        });
-        page.isParsed = true;
-        queries.push(page.updatePageAsPromise());
-        Promise.all(queries).then((inserts) => {
-          res.json(inserts);
+        const existingLinks = {};
+        Link.getLinksAsPromise().then((links) => {
+          links.forEach((link) => {
+            existingLinks[link.href] = link;
+          });
+
+          const newLinks = page.parseLinksFromPage();
+          const queries = [];
+          newLinks.forEach((link) => {
+            if (existingLinks[link.href] !== undefined) {
+              queries.push(link.insertToDatabaseAsPromise());
+            }
+          });
+          page.isParsed = true;
+          queries.push(page.updatePageAsPromise());
+          Promise.all(queries).then((inserts) => {
+            res.json(inserts);
+          });
         });
       }
     });

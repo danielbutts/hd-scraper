@@ -12,11 +12,11 @@ class Link {
   }
 
   insertToDatabaseAsPromise() {
-    return knex('links').insert({ href: this.href, title: this.title });
+    return knex('links').insert({ href: this.href, title: this.title }).returning('*');
   }
 
   updateVisitedAsPromise(isVisited) {
-    return knex('links').update({ is_visited: isVisited }).where({ id: this.id });    
+    return knex('links').update({ is_visited: isVisited }).where({ id: this.id }).returning('*');    
   }
   
   static getLinksAsPromise(unvisited) {

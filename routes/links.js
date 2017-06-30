@@ -101,7 +101,7 @@ router.post('/visit/:count', (req, res) => {
   } else if (typeof count !== 'number' && count <= 0) {
     res.status(400).json({ error: 'Invalid value for parameter \'count\'.' });
   } else {
-    Link.getUnvisitedLinksAsPromise().then((links) => {
+    Link.getLinksAsPromise(true).then((links) => {
       if (links.length === 0) {
         res.status(400).json({ error: 'No links found.' });
       } else {
