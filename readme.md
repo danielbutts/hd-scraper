@@ -8,3 +8,8 @@ curl -i -X POST -H 'Content-Type: application/json' -d '{"href":"/"}' http://loc
 curl -i -X POST -H 'Content-Type: application/json' http://localhost:3000/links/1
 
 ### Parse Initial Page
+
+
+
+### Parse Specific Page
+curl -i -X POST -H 'Content-Type: application/json' http://localhost:3000/pages/422/parse

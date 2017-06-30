@@ -19,8 +19,12 @@ class Link {
     return knex('links').update({ is_visited: isVisited }).where({ id: this.id });    
   }
   
-  static getExistingLinksAsPromise() {
-    return knex('links');
+  static getLinksAsPromise(unvisited) {
+    let query = knex('links');
+    if (unvisited) {
+      query = query.where({ is_visited: false });
+    }
+    return query;    
   }
   
   static getUnvisitedLinksAsPromise() {

@@ -5,7 +5,8 @@ const Page = require('../db/model/Page');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  Link.getExistingLinksAsPromise().then((links) => {
+  const unvisited = req.query.unvisited;
+  Link.getLinksAsPromise(unvisited).then((links) => {
     res.json(links);
   })
   .catch((err) => {
@@ -25,15 +26,6 @@ router.get('/:id', (req, res) => {
       console.log(err);
     });
   }
-});
-
-router.get('/unvisited', (req, res) => {
-  Link.getUnvisitedLinksAsPromise().then((links) => {
-    res.json(links);
-  })
-  .catch((err) => {
-    console.log(err);
-  });
 });
 
 router.post('/', (req, res) => {
@@ -78,13 +70,13 @@ router.post('/:id/visit', (req, res) => {
           links[0].is_visited,
           links[0].is_relevant,
           links[0].id);
-        if (link.is_visited) {
+        if (link.iVisited) {
           res.status(400).json({ error: `Link with id '${id}' has already been visited.` });
         } else {
           Page.getPageAsPromise(`${process.env.BASE_URL}${link.href}`).then((result) => {
             const page = new Page(link.href, result.html());
             const queries = [];
-            queries.push(page.saveToDatabaseAsPromise());
+            queries.push(page.savePageAsPromise());
             queries.push(link.updateVisitedAsPromise(true));
             Promise.all(queries).then((upserts) => {
               res.status(200).json(upserts[0]);
@@ -131,7 +123,7 @@ router.post('/visit/:count', (req, res) => {
 
           results.forEach((newPage, index) => {
             const page = new Page(visitedLinks[index].href, newPage.html());
-            queries.push(page.saveToDatabaseAsPromise());
+            queries.push(page.savePageAsPromise());
             queries.push(visitedLinks[index].updateVisitedAsPromise(true));
             console.log('UPDATING VISITED LINK', visitedLinks[index], index);
           });
